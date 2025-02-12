@@ -1,0 +1,459 @@
+Attribute VB_Name = "Module12"
+Sub RemoveColumns2()
+'
+' Macro1 Macro
+'
+
+'
+Sheets("Pursuit-CDC").Select
+ 
+   
+    
+    Columns("P:P").Select
+    Selection.Cut Destination:=Columns("Q:Q")
+     Columns("O:O").Select
+    Selection.Cut Destination:=Columns("P:P")
+    
+    Columns("N:N").Select
+    Selection.Cut Destination:=Columns("O:O")
+     Columns("M:M").Select
+    Selection.Cut Destination:=Columns("N:N")
+     Columns("L:L").Select
+    Selection.Cut Destination:=Columns("M:M")
+    
+    Columns("J:J").Select
+    Selection.Cut Destination:=Columns("L:L")
+    Columns("I:I").Select
+    Selection.Cut Destination:=Columns("J:J")
+    Columns("F:F").Select
+    Selection.ColumnWidth = 9.44
+    Columns("H:H").Select
+    Selection.Cut Destination:=Columns("I:I")
+    Columns("G:G").Select
+    Selection.Cut Destination:=Columns("H:H")
+    Columns("F:F").Select
+    Selection.Cut Destination:=Columns("G:G")
+    Columns("G:G").Select
+    
+    Range("F2").Select
+    ActiveCell.FormulaR1C1 = "Net Balance "
+    Range("F3").Select
+    
+     Sheets("Non-Accrual - $0").Select
+     
+        
+   Columns("Q:Q").Select
+    Selection.Cut Destination:=Columns("R:R")
+     Columns("P:P").Select
+    Selection.Cut Destination:=Columns("Q:Q")
+    
+    Columns("O:O").Select
+    Selection.Cut Destination:=Columns("P:P")
+     Columns("N:N").Select
+    Selection.Cut Destination:=Columns("O:O")
+     Columns("M:M").Select
+    Selection.Cut Destination:=Columns("N:N")
+    
+    Columns("L:L").Select
+    Selection.Cut Destination:=Columns("M:M")
+    Columns("K:K").Select
+    Selection.Cut Destination:=Columns("L:L")
+    Columns("G:G").Select
+    Selection.ColumnWidth = 9.44
+    Columns("H:H").Select
+    Selection.Cut Destination:=Columns("K:K")
+    Columns("G:G").Select
+    Selection.Cut Destination:=Columns("H:H")
+    Columns("F:F").Select
+    Selection.Cut Destination:=Columns("G:G")
+    Columns("G:G").Select
+    
+    Range("F2").Select
+    ActiveCell.FormulaR1C1 = "Net Balance "
+    Range("F3").Select
+    
+    
+    
+    
+ 
+   
+End Sub
+
+Function FindHeaderCol2(ws As Worksheet, header As String) As Long
+    Dim rng As Range
+    Set rng = ws.Rows(1).Find(What:=header, LookIn:=xlValues, LookAt:=xlWhole, MatchCase:=False)
+    If Not rng Is Nothing Then
+        FindHeaderCol2 = rng.Column
+    Else
+        FindHeaderCol2 = 0 ' Return 0 if the header is not found
+    End If
+End Function
+
+
+Sub MoveMaturityDate()
+'
+' Macro2 Macro
+'
+
+'
+
+ Sheets("Pursuit-CDC").Select
+    Columns("B:B").Select
+    Columns("C:C").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Columns("K:K").Select
+    Selection.Cut Destination:=Columns("C:C")
+    Columns("K:K").Select
+    Selection.Delete Shift:=xlToLeft
+    'Columns("F:G").Select
+    'Selection.Style = "Currency"
+    Range("F7").Select
+    
+      Sheets("Non-Accrual - $0").Select
+     
+     Columns("B:B").Select
+    Columns("C:C").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Columns("L:L").Select
+    Selection.Cut Destination:=Columns("C:C")
+    Columns("L:L").Select
+    Selection.Delete Shift:=xlToLeft
+    'Columns("F:H").Select
+    'Selection.Style = "Currency"
+    Range("F7").Select
+    
+    
+     
+    
+End Sub
+
+Sub AddColumnsToSections()
+    Dim ws As Worksheet, wsB As Worksheet
+    Dim lastRow As Long ' reset for wsB
+    Dim sections As Variant
+    Dim section As Variant ' reset for wsB
+    Dim headerRow As Long ' reset for wsB
+    Dim i As Long
+
+    ' Set the worksheet (change "Sectioned Data" to your specific sheet name if needed)
+    Set ws = ThisWorkbook.Worksheets("Pursuit-CDC")
+    Set wsT = ThisWorkbook.Worksheets("Non-Accrual - $0")
+    
+    
+
+    ' Get the last row in the worksheet
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).row
+
+    ' Define the sections
+    sections = Array("Matured", "1-30 Days", "30 Days", "60 Days", "Over 90 Days", "Non-Accrual")
+
+    ' Loop through each section to find the header rows and insert new columns
+    For Each section In sections
+        headerRow = 0
+
+        ' Find the header row of the current section
+        For i = 1 To lastRow
+            If ws.Cells(i, 1).Value = section Then
+                headerRow = i + 1 ' Assuming the line under the section header contains the column headers
+                With ws.Range(ws.Cells(headerRow - 1, 1), ws.Cells(headerRow - 1, 17)) 'ssection headers ("1-30 Days"..
+                
+                    .Font.name = "Rockwell"
+                    .Interior.Color = RGB(49, 62, 86)
+                    .Font.Color = RGB(255, 255, 255)
+                    .Font.Size = 12
+                    .RowHeight = 19
+                    
+                  
+                End With
+                With ws.Range(ws.Cells(headerRow, 1), ws.Cells(headerRow, 17))  'column headers
+                    .Font.name = "Rockwell"
+                    .Interior.Color = RGB(49, 62, 86)
+                    .Font.Color = RGB(255, 255, 255)
+                    .Font.Size = 10
+                    .WrapText = True
+                    .HorizontalAlignment = xlCenter
+                    .VerticalAlignment = xlBottom
+                    .Font.Bold = True
+                    .RowHeight = 30
+                    
+                  
+                    Dim col As Integer
+                    For col = 1 To ws.Cells(headerRow, ws.Columns.Count).End(xlToLeft).Column
+                        If ws.Cells(headerRow, col).Value = "Participant" Then
+                            ws.Columns(col).WrapText = False
+                        
+                        End If
+                    Next col
+                    
+                    Exit For
+                    
+                    
+                    
+                End With
+                
+                Exit For
+            End If
+        Next i
+
+        ' Debugging: Print the section and the found header row
+        Debug.Print "Section: " & section & ", Header Row: " & headerRow
+
+        ' Insert new column headers in columns T, U, and V
+      '  If headerRow > 0 Then
+           ' ws.Cells(headerRow, "X").Value = "Site Visit"
+           ' ws.Cells(headerRow, "Y").Value = "Special Asset Analyst"
+            'ws.Cells(headerRow, "Z").Value = "Non-Accrual Date"
+            
+            'ws.Columns.AutoFit
+           
+       ' End If
+    Next section
+    
+    
+    ' Do the same for wsT, reset variables for wsB
+    
+     ' Get the last row in the worksheet
+    lastRow = wsT.Cells(wsT.Rows.Count, "A").End(xlUp).row
+ 
+
+    ' Define the sections
+    sections = Array("Matured", "1-30 Days", "30 Days", "60 Days", "Over 90 Days", "Non-Accrual")
+
+    ' Loop through each section to find the header rows and insert new columns
+    For Each section In sections
+        headerRow = 0
+
+        ' Find the header row of the current section
+        For i = 1 To lastRow
+            If wsT.Cells(i, 1).Value = section Then
+                headerRow = i + 1 ' Assuming the line under the section header contains the column headers
+                With wsT.Range(wsT.Cells(headerRow - 1, 1), wsT.Cells(headerRow - 1, 18))
+                
+                    .Font.name = "Rockwell"
+                    .Interior.Color = RGB(49, 62, 86)
+                    .Font.Color = RGB(255, 255, 255)
+                    .Font.Size = 12
+                    .RowHeight = 19
+                End With
+                With wsT.Range(wsT.Cells(headerRow, 1), wsT.Cells(headerRow, 18))
+                    .Font.name = "Rockwell"
+                    .Interior.Color = RGB(49, 62, 86)
+                    .Font.Color = RGB(255, 255, 255)
+                    .Font.Size = 10
+                    .WrapText = True
+                    .HorizontalAlignment = xlCenter
+                    .VerticalAlignment = xlBottom
+                    .Font.Bold = True
+                    .RowHeight = 30
+                    
+                    
+                    For col = 1 To wsT.Cells(headerRow, wsT.Columns.Count).End(xlToLeft).Column
+                        If wsT.Cells(headerRow, col).Value = "Participant" Then
+                            wsT.Columns(col).WrapText = False
+                        
+                        End If
+                    Next col
+                    
+                    Exit For
+                  
+                End With
+                
+                Exit For
+            End If
+        Next i
+
+        ' Debugging: Print the section and the found header row
+        Debug.Print "Section: " & section & ", Header Row: " & headerRow
+
+        ' Insert new column headers in columns T, U, and V
+        'If headerRow > 0 Then
+           ' wsB.Cells(headerRow, "X").Value = "Site Visit"
+           ' wsB.Cells(headerRow, "Y").Value = "Special Asset Analyst"
+           ' wsB.Cells(headerRow, "Z").Value = "Non-Accrual Date"
+            
+            'wsB.Columns.AutoFit
+           
+        'End If
+    Next section
+    
+
+  '  MsgBox "New columns added successfully!"
+End Sub
+
+
+
+Function FindHeaderCol3(ws As Worksheet, header As String) As Long
+    Dim rng As Range
+    Set rng = ws.Rows(2).Find(What:=header, LookIn:=xlValues, LookAt:=xlWhole, MatchCase:=False)
+    If Not rng Is Nothing Then
+        FindHeaderCol3 = rng.Column
+    Else
+        FindHeaderCol3 = 0 ' Return 0 if the header is not found
+    End If
+End Function
+
+Sub AddTitleAndShiftDown()
+    Dim ws As Worksheet, wsT As Worksheet
+    Dim lastRow As Long
+    Dim firstDayCurrentMonth As Date
+    Dim lastDayOfLastMonth As Date
+    Dim title1 As String
+    Dim title2 As String
+    Dim title3 As String
+
+    ' Set the worksheet (change "Sectioned Data" to your specific sheet name if needed)
+    Set ws = ThisWorkbook.Worksheets("Pursuit-CDC")
+    Set wsT = ThisWorkbook.Worksheets("Non-Accrual - $0")
+
+
+    ' Calculate the first day of the current month and the last day of the last month
+    firstDayCurrentMonth = DateSerial(Year(Date), Month(Date), 1)
+    lastDayOfLastMonth = DateAdd("d", -1, firstDayCurrentMonth)
+
+    ' Define the titles
+    title1 = "Pursuit CDC"
+    title2 = "Loans In Default as of " & Format(lastDayOfLastMonth, "mm/dd/yyyy")
+    title3 = "Non-Accrual"
+
+    ' Insert three rows at the top
+    ws.Rows("1:3").Insert Shift:=xlDown, CopyOrigin:=xlFormatFromLeftOrAbove
+    wsT.Rows("1:3").Insert Shift:=xlDown, CopyOrigin:=xlFormatFromLeftOrAbove
+    
+    ' Set the titles
+    ws.Cells(1, 1).Value = title1
+    ws.Cells(2, 1).Value = title2
+    
+    ' wsT
+    wsT.Cells(1, 1).Value = title3
+    wsT.Cells(2, 1).Value = title2
+    
+     
+    ' Merge cells for the titles to center them across the sheet
+    ws.Range("A1:O1").Merge
+    ws.Range("A2:O2").Merge
+    ' Merge cells for the titles to center them across the sheet
+    wsT.Range("A1:Q1").Merge
+    wsT.Range("A2:Q2").Merge
+    
+
+    ' Format the titles
+    With ws.Cells(1, 1)
+        .Font.Bold = True
+        .Font.Size = 16
+        .Font.name = "Rockwell"
+        .HorizontalAlignment = xlCenter
+        .Interior.Color = RGB(205, 72, 133)
+        .Font.Color = RGB(255, 255, 255)
+    End With
+
+    With ws.Cells(2, 1)
+        .Font.Bold = True
+        .Font.Size = 12
+        .Font.name = "Rockwell"
+        .HorizontalAlignment = xlCenter
+        .Interior.Color = RGB(205, 72, 133)
+        .Font.Color = RGB(255, 255, 255)
+    End With
+    
+    ' Format titles in wsB
+    
+    With wsT.Cells(1, 1)
+        .Font.Bold = True
+        .Font.Size = 16
+        .Font.name = "Rockwell"
+        .HorizontalAlignment = xlCenter
+        .Interior.Color = RGB(205, 72, 133)
+        .Font.Color = RGB(255, 255, 255)
+    End With
+
+    With wsT.Cells(2, 1)
+        .Font.Bold = True
+        .Font.Size = 12
+        .Font.name = "Rockwell"
+        .HorizontalAlignment = xlCenter
+        .Interior.Color = RGB(205, 72, 133)
+        .Font.Color = RGB(255, 255, 255)
+    End With
+
+
+
+   
+    
+
+  ' MsgBox "Title added and data shifted down successfully!"
+End Sub
+
+Sub deleteSectionedAndFiltered()
+Attribute deleteSectionedAndFiltered.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' deleteSectionedAndFiltered Macro
+'
+
+'
+Dim wb As Workbook
+Dim name As String
+Dim i As Long
+Dim ws As Worksheet
+
+
+Application.DisplayAlerts = False
+For Each ws In ActiveWorkbook.Worksheets
+    If ws.name <> "Button" Then
+        ws.Delete
+    End If
+Next ws
+
+Application.DisplayAlerts = True
+
+ 
+End Sub
+
+
+Sub tbd()
+   ws.Range("A1:AD1").Merge
+    ws.Range("A2:AD2").Merge
+    ' Merge cells for the titles to center them across the sheet
+    wsT.Range("A1:AE1").Merge
+    wsT.Range("A2:AE2").Merge
+    
+
+    ' Format the titles
+    With ws.Cells(1, 1)
+        .Font.Bold = True
+        .Font.Size = 16
+        .Font.name = "Rockwell"
+        .HorizontalAlignment = xlCenter
+        .Interior.Color = RGB(205, 72, 133)
+        .Font.Color = RGB(255, 255, 255)
+    End With
+
+    With ws.Cells(2, 1)
+        .Font.Bold = True
+        .Font.Size = 12
+        .Font.name = "Rockwell"
+        .HorizontalAlignment = xlCenter
+        .Interior.Color = RGB(205, 72, 133)
+        .Font.Color = RGB(255, 255, 255)
+    End With
+    
+    ' Format titles in wsB
+    
+    With wsT.Cells(1, 1)
+        .Font.Bold = True
+        .Font.Size = 16
+        .Font.name = "Rockwell"
+        .HorizontalAlignment = xlCenter
+        .Interior.Color = RGB(205, 72, 133)
+        .Font.Color = RGB(255, 255, 255)
+    End With
+
+    With wsT.Cells(2, 1)
+        .Font.Bold = True
+        .Font.Size = 12
+        .Font.name = "Rockwell"
+        .HorizontalAlignment = xlCenter
+        .Interior.Color = RGB(205, 72, 133)
+        .Font.Color = RGB(255, 255, 255)
+    End With
+       
+End Sub

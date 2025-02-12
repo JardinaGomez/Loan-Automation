@@ -1,0 +1,161 @@
+Attribute VB_Name = "Module5"
+Sub FillNetBalance() ' DONT NEED
+' This macro generates the 'Net Balance' Column for each loan, using the formula
+' (G/L Balance - [(G/L Balance) * (Sba Gty %)] if there is an 'AB' in the loan#
+
+
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim colLoanNbr As Long, colGLBalance As Long, colSBAGty As Long, colNetBalance As Long
+    Dim i As Long
+    Dim loanNbr As String
+    Dim glBalance As Double, sbaGty As Double, netBalance As Double
+
+    ' Set the worksheet to "Sectioned Data"
+    Set ws = ThisWorkbook.Worksheets("Sectioned Data")
+
+    ' Get the last row in the worksheet
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).row
+
+    ' Find the columns for "Loan Nbr", "G/L Balance", "sba Guarantee Percentage", and "Net Balance"
+    colLoanNbr = FindHeaderCol(ws, "Loan Nbr")
+    colGLBalance = FindHeaderCol(ws, "Principal")
+    colSBAGty = FindHeaderCol(ws, "SBA Gty%")
+    colNetBalance = FindHeaderCol(ws, "Net Balance ")
+
+    ' Debugging: Print column numbers to Immediate Window
+    Debug.Print "Loan Nbr Column: " & colLoanNbr
+    Debug.Print "G/L Balance Column: " & colGLBalance
+    Debug.Print "sba Guarantee Percentage Column: " & colSBAGty
+    Debug.Print "Net Balance Column: " & colNetBalance
+
+    ' Check if all columns were found
+    If colLoanNbr = 0 Or colGLBalance = 0 Or colSBAGty = 0 Or colNetBalance = 0 Then
+        MsgBox "One or more required columns were not found. Please check the headers.", vbCritical
+        Exit Sub
+    End If
+
+    ' Loop through each row to calculate the Net Balance
+    For i = 3 To lastRow ' Assuming headers are in the first row
+        ' Skip the rows that are section headers
+        If ws.Cells(i, colLoanNbr).Value = "Loan Nbr" Then
+            ' Skip the header row and move to the next row
+            Do
+                i = i + 1
+            Loop Until ws.Cells(i, colLoanNbr).Value <> "Loan Nbr"
+        End If
+
+        loanNbr = ws.Cells(i, colLoanNbr).Value
+        glBalance = ws.Cells(i, colGLBalance).Value
+        sbaGty = ws.Cells(i, colSBAGty).Value / 100 ' Convert percentage to decimal
+
+        If InStr(loanNbr, "AB") > 0 Then
+            netBalance = glBalance - (glBalance * sbaGty)
+        Else
+            netBalance = glBalance
+        End If
+
+        ws.Cells(i, colNetBalance).Value = netBalance
+    Next i
+
+    MsgBox "Net Balance column has been filled successfully!"
+End Sub
+
+Function FindHeaderCol(ws As Worksheet, header As String) As Long
+    Dim rng As Range
+    Set rng = ws.Rows(2).Find(What:=header, LookIn:=xlValues, LookAt:=xlWhole, MatchCase:=False)
+    If Not rng Is Nothing Then
+        FindHeaderCol = rng.Column
+    Else
+        FindHeaderCol = 0 ' Return 0 if the header is not found
+    End If
+End Function
+
+
+
+Sub FixPercentage()
+'
+' FixPercentage Macro This macro fixes the percentage problem tat occurs resulting in result
+' percentage being in the thousanths'.
+'
+
+'
+    Range("N5").Select
+    Selection.PasteSpecial Paste:=xlPasteValuesAndNumberFormats, Operation:= _
+        xlNone, SkipBlanks:=False, Transpose:=False
+    Range("N5:N242").Select
+    Range("N242").Activate
+    Application.CutCopyMode = False
+    Selection.ClearContents
+    ActiveWindow.SmallScroll Down:=-225
+    Columns("N:N").ColumnWidth = 1
+    Range("A1:V1").Select
+End Sub
+Sub FillNetBalance2() ' DONT NEED
+    ' This macro generates the 'Net Balance' Column for each loan, using the formula
+    ' (G/L Balance - [(G/L Balance) * (Sba Gty %)] if there is an 'AB' in the loan#
+
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim colLoanNbr As Long, colGLBalance As Long, colSBAGty As Long, colNetBalance As Long
+    Dim i As Long
+    Dim loanNbr As String
+    Dim glBalance As Variant, sbaGty As Variant, netBalance As Double
+
+    ' Set the worksheet to "Sectioned Data"
+    Set ws = ThisWorkbook.Worksheets("Sectioned Data")
+
+    ' Get the last row in the worksheet
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).row
+
+    ' Find the columns for "Loan Nbr", "G/L Balance", "sba Guarantee Percentage", and "Net Balance"
+    colLoanNbr = FindHeaderCol(ws, "Loan Nbr")
+    colGLBalance = FindHeaderCol(ws, "Principal")
+    colSBAGty = FindHeaderCol(ws, "SBA Gty%")
+    colNetBalance = FindHeaderCol(ws, "Net Balance ")
+
+    ' Debugging: Print column numbers to Immediate Window
+    Debug.Print "Loan Nbr Column: " & colLoanNbr
+    Debug.Print "G/L Balance Column: " & colGLBalance
+    Debug.Print "sba Guarantee Percentage Column: " & colSBAGty
+    Debug.Print "Net Balance Column: " & colNetBalance
+
+    ' Check if all columns were found
+    If colLoanNbr = 0 Or colGLBalance = 0 Or colSBAGty = 0 Or colNetBalance = 0 Then
+        MsgBox "One or more required columns were not found. Please check the headers.", vbCritical
+        Exit Sub
+    End If
+
+    ' Loop through each row to calculate the Net Balance
+    For i = 3 To lastRow ' Assuming headers are in the first row
+        ' Skip the rows that are section headers
+        If ws.Cells(i, colLoanNbr).Value = "Loan Nbr" Then
+            ' Skip the header row and move to the next row
+            Do
+                i = i + 1
+            Loop Until ws.Cells(i, colLoanNbr).Value <> "Loan Nbr"
+        End If
+
+        loanNbr = Trim(ws.Cells(i, colLoanNbr).Value)
+        glBalance = ws.Cells(i, colGLBalance).Value
+        sbaGty = ws.Cells(i, colSBAGty).Value
+
+        ' Check if the necessary cells are filled
+        If loanNbr <> "" And IsNumeric(glBalance) And IsNumeric(sbaGty) Then
+            sbaGty = sbaGty / 100 ' Convert percentage to decimal
+
+            If InStr(loanNbr, "AB") > 0 Then
+                netBalance = glBalance - (glBalance * sbaGty)
+            Else
+                netBalance = glBalance
+            End If
+
+            ws.Cells(i, colNetBalance).Value = netBalance
+        Else
+            ws.Cells(i, colNetBalance).ClearContents
+        End If
+    Next i
+
+    MsgBox "Net Balance column has been filled successfully!"
+End Sub
+

@@ -1,0 +1,168 @@
+Attribute VB_Name = "Module8"
+Sub AddMissingLoansFromExternalReport() '- DONT NEED
+    Dim wsFilteredData As Worksheet
+    Dim wsDataReport As Worksheet
+    Dim lastRowFilteredData As Long
+    Dim lastRowDataReport As Long
+    Dim nextRowFilteredData As Long
+    Dim colCompanyNameFilteredData As Long
+    Dim colCompanyNameDataReport As Long
+    Dim i As Long
+    Dim j As Long
+    Dim companyNameFilteredData As String
+    Dim companyNameDataReport As String
+    Dim found As Boolean
+    Dim dataReportWorkbook As Workbook
+    Dim dataReportFilePath As String
+
+    ' Set the file path of the external workbook
+    dataReportFilePath = "H:\SPECIAL ASSETS\DELINQUENCY REPORTS\MASTER REPORTS\6.30.24 - Test.xlsx" ' Change this to the actual file path
+
+    ' Open the external workbook
+    On Error Resume Next
+    Set dataReportWorkbook = Workbooks.Open(dataReportFilePath)
+    On Error GoTo 0
+    If dataReportWorkbook Is Nothing Then
+        MsgBox "6.30.24 Data report not found!"
+        Exit Sub
+    End If
+
+    ' Set the worksheets
+    Set wsFilteredData = ThisWorkbook.Worksheets("Sheet1")
+    Set wsDataReport = dataReportWorkbook.Worksheets("Sheet1") ' Change to the actual sheet name if different
+
+    ' Find the column for "Company Name" in both sheets
+    colCompanyNameFilteredData = FindHeaderCol(wsFilteredData, "Company Name")
+    colCompanyNameDataReport = FindHeaderCol(wsDataReport, "Company Name")
+    If colCompanyNameFilteredData = 0 Or colCompanyNameDataReport = 0 Then
+        MsgBox "Company Name column not found in one or both sheets!"
+        dataReportWorkbook.Close False
+        Exit Sub
+    End If
+
+    ' Get the last row in both sheets
+    lastRowFilteredData = wsFilteredData.Cells(wsFilteredData.Rows.Count, "A").End(xlUp).row
+    lastRowDataReport = wsDataReport.Cells(wsDataReport.Rows.Count, "A").End(xlUp).row
+
+    ' Initialize the next row for adding missing loans to Filtered Data
+    nextRowFilteredData = lastRowFilteredData + 1
+
+    ' Cross-reference the "Company Name" columns
+    For i = 2 To lastRowDataReport ' Assuming headers are in the first row
+        companyNameDataReport = wsDataReport.Cells(i, colCompanyNameDataReport).Value
+        found = False
+        For j = 2 To lastRowFilteredData
+            companyNameFilteredData = wsFilteredData.Cells(j, colCompanyNameFilteredData).Value
+            If companyNameDataReport = companyNameFilteredData Then
+                found = True
+                Exit For
+            End If
+        Next j
+        If Not found Then
+            wsDataReport.Rows(i).Copy Destination:=wsFilteredData.Rows(nextRowFilteredData)
+            nextRowFilteredData = nextRowFilteredData + 1
+        End If
+    Next i
+
+    ' Close the external workbook
+    dataReportWorkbook.Close False
+
+ '   MsgBox "Missing loans have been added to Filtered Data!"
+End Sub
+
+Function FindHeaderCol(ws As Worksheet, header As String) As Long
+    Dim rng As Range
+    Set rng = ws.Rows(1).Find(What:=header, LookIn:=xlValues, LookAt:=xlWhole, MatchCase:=False)
+    If Not rng Is Nothing Then
+        FindHeaderCol = rng.Column
+    Else
+        FindHeaderCol = 0 ' Return 0 if the header is not found
+    End If
+End Function
+
+Sub DeleteMatrAndAccrColumns()
+    Dim ws As Worksheet, wsT As Worksheet
+    Dim colMaturityDate As Long
+    Dim colNonAccrual As Long
+    Dim maturedStartRow As Long
+    Dim maturedEndRow As Long
+    Dim lastRow As Long, lasTrowT As Long
+
+    ' Set the worksheet
+    Set ws = ThisWorkbook.Worksheets("Pursuit-CDC")
+    Set wsT = ThisWorkbook.Worksheets("Non-Accrual - $0")
+    
+    
+    ' Get the last row in the worksheet
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).row
+    lasTrowT = wsT.Cells(wsT.Rows.Count, "A").End(xlUp).row
+    
+    ' Initialize matured section rows
+    maturedStartRow = 0
+    maturedEndRow = 0
+
+    ' Find the "Matured" section
+    For i = 1 To lastRow
+        If ws.Cells(i, 1).Value Like "Matured" Then
+            maturedStartRow = i + 2 ' Assuming two rows under the "Matured" header are data rows
+            Exit For
+        End If
+    Next i
+
+    ' Find the end of the "Matured" section
+    If maturedStartRow > 0 Then
+        For i = maturedStartRow To lastRow
+            If ws.Cells(i, 1).Value = "" Then
+                maturedEndRow = i - 1
+                Exit For
+            End If
+        Next i
+    End If
+
+    ' Find the columns for "Maturity Date" and "Non-Accrual"
+    colMaturityDate = FindHeaderCol2(ws, "Maturity Date")
+    colNonAccrual = FindHeaderCol2(ws, "Non-Accrual")
+
+    ' Delete the "Non-Accrual" column if found
+    If colNonAccrual > 0 Then
+        ws.Columns(colNonAccrual).Delete
+        ' Adjust column index if necessary
+        If colMaturityDate > colNonAccrual Then
+            colMaturityDate = colMaturityDate - 1
+        End If
+    End If
+
+    ' Check if "Maturity Date" column is within the "Matured" section and delete if not
+   ' If colMaturityDate > 0 And (maturedStartRow = 0 Or colMaturityDate < ws.Cells(maturedStartRow, 1).Column Or colMaturityDate > ws.Cells(maturedEndRow, 1).Column) Then
+      '  ws.Columns(colMaturityDate).Delete
+   ' End If
+    ' Find the columns for "Maturity Date" and "Non-Accrual"
+    colMaturityDate = FindHeaderCol2(wsT, "Maturity Date")
+    colNonAccrual = FindHeaderCol2(wsT, "Non-Accrual")
+
+    ' Delete the "Non-Accrual" column if found
+    If colNonAccrual > 0 Then
+        wsT.Columns(colNonAccrual).Delete
+        ' Adjust column index if necessary
+        If colMaturityDate > colNonAccrual Then
+            colMaturityDate = colMaturityDate - 1
+        End If
+    End If
+
+  '  MsgBox "Columns 'Maturity Date' and 'Non-Accrual' have been deleted if appropriate!"
+End Sub
+
+
+
+
+
+Function FindHeaderCol2(ws As Worksheet, header As String) As Long
+    Dim rng As Range
+    Set rng = ws.Rows(2).Find(What:=header, LookIn:=xlValues, LookAt:=xlWhole, MatchCase:=False)
+    If Not rng Is Nothing Then
+        FindHeaderCol2 = rng.Column
+    Else
+        FindHeaderCol2 = 0 ' Return 0 if the header is not found
+    End If
+End Function
+

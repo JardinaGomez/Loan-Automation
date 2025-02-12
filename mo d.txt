@@ -1,0 +1,76 @@
+Attribute VB_Name = "Reorganize"
+Sub ReorganizeColumns()
+    ' This macro moves each column to their appropriate locations
+
+    Dim ws As Worksheet, wsT As Worksheet
+    Dim headers As Variant
+    Dim headerPositions As Variant
+    Dim lastCol As Long, lastColT As Long
+    Dim i As Long
+    Dim headerIndex As Variant, headerIndexT As Variant
+    Dim found As Boolean
+
+    ' Set the original worksheet
+    Set ws = ThisWorkbook.Worksheets("Filtered Data - CDC")
+    If ws Is Nothing Then
+        MsgBox "Filtered Data worksheet not found!"
+        Exit Sub
+    End If
+    
+     Set wsT = ThisWorkbook.Worksheets("Filtered Data - $0")
+    If wsT Is Nothing Then
+        MsgBox "Filtered Data for Specialty programs worksheet not found!"
+        Exit Sub
+    End If
+    
+    ' Define the headers to keep and their target positions
+    headers = Array("Company Name", "Loan Nbr", "Next Payment Due Date", "Note Date", "G/L Balance", "USER18N", "USER10D", "Risk Factor", "Maturity Date", "Int Paid to Date", "Non-Accrual", "sba Guarantee Percentage", "Part Id", "Total Due", "Servicing Officer", "User8d", "USER9D")
+     headerPositions = Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17)
+
+    headerPositionsNA = Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18)
+
+
+
+    ' Loop through the headers array to find and move each column
+    For i = LBound(headers) To UBound(headers)
+        found = False
+        headerIndex = Application.Match(headers(i), ws.Rows(1), 0)
+        If Not IsError(headerIndex) Then
+            found = True
+            ' Only move the column if it's not already in the correct position
+            If headerIndex <> headerPositions(i) Then
+                ' Cut the column and insert it into the new position
+                ws.Columns(headerIndex).Cut
+                ws.Columns(headerPositions(i)).Insert Shift:=xlToRight
+            End If
+        End If
+
+        If Not found Then
+            MsgBox "Header '" & headers(i) & "' not found in the worksheet."
+        End If
+    Next i
+     'Loop through the headersNA array to find and move each column - non accrual tab
+    For i = LBound(HeadersNA) To UBound(HeadersNA)
+        found = False
+        headerIndexT = Application.Match(HeadersNA(i), wsT.Rows(1), 0)
+        If Not IsError(headerIndexT) Then
+            found = True
+            If headerIndexT <> headerPositionsNA(i) Then
+                wsT.Columns(headerIndexT).Cut
+                wsT.Columns(headerPositionsNA(i)).Insert Shift:=xlToRight
+            End If
+        End If
+        If Not found Then
+            MsgBox "Header '" & HeadersNA(i) & "' not found in the worksheet."
+        End If
+    
+
+        
+    Next i
+End Sub
+
+
+
+
+
+

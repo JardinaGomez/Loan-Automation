@@ -1,0 +1,258 @@
+Attribute VB_Name = "RETRIEVE"
+Sub CopyPreviousMonthData()
+    Dim wsNew As Worksheet
+    Dim firstDayCurrentMonth As Date
+    Dim currentYear As Integer
+    Dim currentMonth As Integer
+    Dim previousMonth As Integer
+    Dim previousMonthFile As String
+    Dim folderPath As String
+    Dim fileName As String
+    Dim sourceWorkbook As Workbook
+    Dim sourceSheet As Worksheet
+    Dim fileFound As Boolean
+    
+    ' Initialize variables
+    Set wsNew = ActiveWorkbook.Worksheets.Add(Type:=xlWorksheet)
+    wsNew.name = "Sheet1"
+    
+    Set wsNew = ThisWorkbook.Sheets("Sheet1")
+    firstDayCurrentMonth = DateSerial(Year(Date), Month(Date), 1)
+    currentYear = Year(Date)
+    currentMonth = Month(Date)
+    
+    Debug.Print "Current month: " & currentMonth
+    ' Determine the previous month
+    If currentMonth = 1 Then
+        previousMonth = 12
+    Else
+        previousMonth = currentMonth - 1
+    End If
+    
+    ' Construct the folder path for the current year
+    folderPath = "H:\SPECIAL ASSETS\DELINQUENCY REPORTS\MASTER REPORTS\" & currentYear & "\"
+    
+    ' Loop through all files in the folder to find the correct file
+    fileName = Dir(folderPath & "*.xlsx")
+    Debug.Print " file: " & Left(fileName, 2)
+    
+    fileFound = False
+    Do While fileName <> ""
+        If Left(fileName, 2) = previousMonth Then
+            previousMonthFile = fileName
+            fileFound = True
+            Exit Do
+        End If
+        fileName = Dir
+    Loop
+    
+    ' Check if the file was found
+    If Not fileFound Then
+        MsgBox "The file for the previous month does not exist in the folder: " & folderPath, vbExclamation
+        Exit Sub
+    End If
+    
+    ' Open the source workbook
+    Set sourceWorkbook = Workbooks.Open(folderPath & previousMonthFile)
+    Set sourceSheet = sourceWorkbook.Sheets("Sheet1")
+    
+    ' Copy data from source sheet to the new sheet
+    sourceSheet.UsedRange.Copy wsNew.Range("A1")
+    
+    ' Close the source workbook
+    sourceWorkbook.Close False
+    
+    'MsgBox "Data from " & previousMonthFile & " has been copied successfully.", vbInformation
+End Sub
+
+Sub CopyPrevYear()
+    ' This macro retrieves last year's past due report and transfers relevant data to the current year report
+
+    Dim wsNew As Worksheet
+    Dim wsOld As Worksheet ' last year report
+    Dim currentYear As Integer
+    Dim currentMonth As Integer
+    Dim previousMonth As Integer
+    Dim previousYrFile As String
+    Dim pastYr As String ' last year
+    Dim pastYrFoldPath As String
+    Dim fileName As String
+    Dim pastworkbook As Workbook
+    Dim pastSheet As Worksheet
+    Dim fileFound As Boolean
+    Dim principalValues(1 To 6) As Double
+    Dim netBalanceValues(1 To 6) As Double
+    Dim i As Integer
+    Dim searchRange As Range
+    Dim cell As Range
+    Dim startRow As Long
+    Dim dateCol As Integer
+    Dim principalCol As Integer
+    Dim netBalanceCol As Integer
+    Dim sectionHeaders As Variant
+    Dim lastRow As Long
+    Dim noteDate As Date
+    Dim header As String
+    Dim j As Integer
+    
+    ' Initialize variables
+    currentYear = Year(Date)
+    pastYr = currentYear - 1
+    currentMonth = Month(Date)
+    pastYr = Right(pastYr, 2)
+    sectionHeaders = Array("1-30 Days", "Non-Accrual", "30 Days", "60 Days", "Over 90 Days", "Matured")
+
+    ' Determine the previous month
+    If currentMonth = 1 Then
+        previousMonth = 12
+    Else
+        previousMonth = currentMonth - 1
+    End If
+    
+    ' Construct the folder path for the current year
+    pastYrFoldPath = "H:\SPECIAL ASSETS\DELINQUENCY REPORTS\PURSUIT BDC\"
+    
+    ' Loop through all files in the folder to find the correct file
+    fileName = Dir(pastYrFoldPath & "*.xlsb")
+    fileFound = False
+    Do While fileName <> ""
+        If Left(fileName, 2) = previousMonth And ((Mid(fileName, 6, 2) = pastYr) Or (Mid(fileName, 7, 2) = pastYr)) Then
+            previousYrFile = fileName
+            fileFound = True
+            Exit Do
+        End If
+        fileName = Dir
+    Loop
+    
+    '****** after finding past year report update pastYr to show full date - NEED TO RESET PASTYR TO MATCH WITH WHAT IS IN REPORT
+    'pastYr = Format(DateAdd("m", -1, firstDayCurrentMonth), "mm/dd/yyyy")
+    'firstDayCurrentMonth = DateSerial(Year(currentYear - 1), Month(currentMonth), 1)
+
+    ' Check if the file was found
+    If Not fileFound Then
+        MsgBox "The file for the previous month does not exist in the folder: " & pastYrFoldPath, vbExclamation
+        Exit Sub
+    End If
+    
+    ' Open the source workbook
+    Set pastworkbook = Workbooks.Open(pastYrFoldPath & previousYrFile)
+    Set pastSheet = pastworkbook.Sheets("Pursuit-CDC")
+    
+    lastRow = pastSheet.Cells(pastSheet.Rows.Count, "A").End(xlUp).row
+    ' iterate through sheet - skipping over summary boxes
+    j = 0
+    For i = 13 To lastRow
+        header = pastSheet.Cells(i, 1).Value
+     
+        
+        If IsSectionHeader(header) Then
+         
+            startRow = i + 1
+            ' Find the Note Date column
+            Set searchRange = pastSheet.Rows(startRow).Find(What:="Note Date", LookAt:=xlWhole)
+            If Not searchRange Is Nothing Then
+                dateCol = searchRange.Column
+                principalCol = dateCol + 2
+                netBalanceCol = dateCol + 4
+                
+                ' Iterate over rows below to find the previous year's Note Date
+                lastRow = pastSheet.Cells(pastSheet.Rows.Count, dateCol).End(xlUp).row
+                For Each cell In pastSheet.Range(pastSheet.Cells(startRow + 1, dateCol), pastSheet.Cells(lastRow, dateCol))
+                    If cell.Value <> "" Then
+                    noteDate = DateValue(cell.Value)
+                        If cell.Font.Bold = True Then
+                        
+                            If Right(noteDate, 2) = pastYr Then
+                            ' Store the Principal and Net Balance values
+                                ' debuuger to check values
+                                Debug.Print "Section: " & header & vbNewLine & "Principle: " & cell.Offset(0, 2).Value
+                               
+                                principalValues(j + 1) = cell.Offset(0, 2).Value
+                                netBalanceValues(j + 1) = cell.Offset(0, 4).Value
+                                j = j + 1
+                                Exit For
+                            End If
+                        End If
+                    End If
+                Next cell
+            End If
+        End If
+    Next i
+    
+    ' Close the previous year's workbook
+    pastworkbook.Close False
+    
+    ' Activate the current year's report (assuming it's open)
+    Set wsNew = ThisWorkbook.Sheets("Pursuit-CDC") ' Replace with the actual sheet name
+    
+    'Transfer the stored values to the current year's report
+   
+    
+    lastRow = wsNew.Cells(wsNew.Rows.Count, "A").End(xlUp).row
+    j = 0
+    ' iterate through sheet - skipping over summary boxes
+    For i = 13 To lastRow
+        header = wsNew.Cells(i, 1).Value
+     
+        If IsSectionHeader(header) Then
+        
+            startRow = i + 1
+            ' Find the Note Date column
+           
+        ' Find the Note Date column in this section
+        Set dateColCell = wsNew.Rows(startRow).Find(What:="Note Date", LookAt:=xlWhole)
+        If Not dateColCell Is Nothing Then
+            dateCol = dateColCell.Column
+            principalCol = dateCol + 2
+            netBalanceCol = dateCol + 4
+            
+            ' Iterate through the rows in this section to find the right place to insert the values
+            lastRow = wsNew.Cells(wsNew.Rows.Count, dateCol).End(xlUp).row
+            For Each cell In wsNew.Range(wsNew.Cells(startRow + 1, dateCol), wsNew.Cells(lastRow, dateCol))
+                ' If the cell is empty (no date), assume this is the correct row to paste
+                'noteDate = DateValue(cell.Value)
+                If cell.Font.Bold = True Then
+                    If Right(cell.Value, 2) = pastYr Then
+                      
+                    
+                        wsNew.Cells(cell.row, principalCol).Value = principalValues(j + 1)
+                        wsNew.Cells(cell.row, netBalanceCol).Value = netBalanceValues(j + 1)
+                        j = j + 1
+                        Exit For
+                    End If
+                End If
+            Next cell
+        End If
+    End If
+Next i
+
+' MsgBox to indicate completion
+MsgBox "Data from the previous year's report has been transferred successfully.", vbInformation
+
+
+
+End Sub
+
+
+Function IsSectionHeader(header As String) As Boolean
+    Select Case header
+        Case "Matured", "1-30 Days", "30 Days", "60 Days", "Over 90 Days", "Non-Accrual"
+            IsSectionHeader = True
+        Case Else
+            IsSectionHeader = False
+    End Select
+End Function
+
+
+
+
+Function FindRow(ws As Worksheet, colNum As Integer, header As String)
+Dim rng As Range
+    Set rng = ws.Columns("colNum:colNum").Find(What:=header, LookIn:=xlValues, LookAt:=xlWhole, MatchCase:=False)
+    If Not rng Is Nothing Then
+        FindRow = rng.row
+    Else
+        FindRow = 0 ' Return 0 if the header is not found
+    End If
+End Function
+

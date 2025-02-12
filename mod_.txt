@@ -1,0 +1,299 @@
+Attribute VB_Name = "Module6"
+
+Sub fixColumns()
+'
+' fixColumns Macro
+'
+
+'
+Sheets("Pursuit-CDC").Select
+     Columns("B:B").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.57
+    Columns("D:D").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 3.43
+    Columns("F:F").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 4.5
+    Columns("H:H").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 4.5
+    Columns("J:J").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 3.14
+    Columns("L:L").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.43
+    Columns("N:N").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2
+    Columns("P:P").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.57
+    Columns("R:R").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.14
+    
+    Columns("T:T").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.14
+     Columns("V:V").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.14
+    
+    
+        Columns("X:X").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.14
+    
+     Columns("Z:Z").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.14
+     Columns("AB:AB").Select
+      Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.14
+    
+     Sheets("Non-Accrual - $0").Select
+    Columns("B:B").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.57
+    Columns("D:D").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 3.43
+    Columns("F:F").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 4.5
+    Columns("H:H").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 4.5
+    Columns("J:J").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 3.14
+    Columns("L:L").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.43
+    Columns("N:N").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2
+    Columns("P:P").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.57
+    Columns("R:R").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.14
+    
+    Columns("T:T").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.14
+     Columns("V:V").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.14
+    
+    
+        Columns("X:X").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.14
+    
+     Columns("Z:Z").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.14
+     Columns("AB:AB").Select
+      Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.14
+     Columns("AD:AD").Select
+      Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Selection.ColumnWidth = 2.14
+    
+    
+    
+End Sub
+
+Sub FillNetBalanceAndSBA()
+    ' This macro generates the 'Net Balance' Column for each loan, using the formula
+    ' (G/L Balance - [(G/L Balance) * (Sba Gty %)] if there is an 'AB' in the loan#
+    ' It also ensures that the SBA Gty% column is converted to percentages
+
+    Dim ws As Worksheet, wsT As Worksheet
+    Dim lastRow As Long, lasTrowT As Long
+    Dim colLoanNbr As Long, colGLBalance As Long, colSBAGty As Long, colNetBalance As Long, colCharge As Long
+    Dim i As Long
+    Dim loanNbr As String
+    Dim glBalance As Variant, sbaGty As Variant, netBalance As Double, ChargeOff As Double
+
+    ' Set the worksheet to "Sectioned Data"
+    Set ws = ThisWorkbook.Worksheets("Pursuit-CDC")
+    Set wsT = ThisWorkbook.Worksheets("Non-Accrual - $0")
+    
+    ' Get the last row in the worksheet
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).row
+    lasTrowT = wsT.Cells(wsT.Rows.Count, "A").End(xlUp).row
+    
+    ' Find the columns for "Loan Nbr", "G/L Balance", "sba Guarantee Percentage","Net Balance", and "Participant"
+    colLoanNbr = FindHeaderCol(ws, "Loan Nbr")
+    colGLBalance = FindHeaderCol(ws, "Principal")
+    colSBAGty = FindHeaderCol(ws, "SBA Gty%")
+    colNetBalance = FindHeaderCol(ws, "Net Balance ")
+    colParticipant = FindHeaderCol(ws, "Principal")
+    colCharge = FindHeaderCol(ws, "Charge-Off $")
+    
+    
+
+    ' Debugging: Print column numbers to Immediate Window
+    Debug.Print "Loan Nbr Column: " & colLoanNbr
+    Debug.Print "G/L Balance Column: " & colGLBalance
+    Debug.Print "sba Guarantee Percentage Column: " & colSBAGty
+    Debug.Print "Net Balance Column: " & colNetBalance
+    Debug.Print "Participant COlumn: " & colParticipant
+
+    ' Check if all columns were found
+    If colLoanNbr = 0 Or colGLBalance = 0 Or colSBAGty = 0 Or colNetBalance = 0 Or colParticipant = 0 Then
+        MsgBox "One or more required columns were not found. Please check the headers.", vbCritical
+        Exit Sub
+    End If
+
+    ' Loop through each row to calculate the Net Balance and update SBA Gty%
+    For i = 3 To lastRow ' Assuming headers are in the first row
+        ' Skip the rows that are section headers
+        If ws.Cells(i, colLoanNbr).Value = "Loan Nbr" Then ' added fix here for participant
+            ' Skip the header row and move to the next row
+            Do
+                i = i + 1
+            Loop Until ws.Cells(i, colLoanNbr).Value <> "Loan Nbr"
+        End If
+
+        loanNbr = Trim(ws.Cells(i, colLoanNbr).Value)
+        glBalance = ws.Cells(i, colGLBalance).Value
+        sbaGty = ws.Cells(i, colSBAGty).Value
+        ChargeOff = ws.Cells(i, colCharge).Value
+
+        ' Check if the necessary cells are filled
+        If loanNbr <> "" And IsNumeric(glBalance) And IsNumeric(sbaGty) Then
+            ' Convert sbaGty to a decimal percentage
+            sbaGty = sbaGty / 100
+            ws.Cells(i, colSBAGty).Value = Format(sbaGty, "0.00%")
+
+            ' Calculate net balance
+            If InStr(loanNbr, "AB") > 0 Then
+                netBalance = ((glBalance + ChargeOff) * (1 - sbaGty)) - ChargeOff
+            Else
+               netBalance = ((glBalance + ChargeOff) * (1 - sbaGty)) - ChargeOff
+            End If
+
+            ws.Cells(i, colNetBalance).Value = netBalance
+        Else
+            ' Clear contents if necessary cells are not filled
+            ws.Cells(i, colNetBalance).ClearContents
+            ws.Cells(i, colSBAGty).ClearContents
+        End If
+    Next i
+    
+    ' DO THE SAME FOR WST
+    ' Find the columns for "Loan br", "G/L Balance", "sba Guarantee Percentage","Net Balance", and "Participant"
+    colLoanNbr = FindHeaderCol(wsT, "Loan Nbr")
+    colGLBalance = FindHeaderCol(wsT, "Principal")
+    colSBAGty = FindHeaderCol(wsT, "SBA Gty%")
+    colNetBalance = FindHeaderCol(wsT, "Net Balance ")
+    colParticipant = FindHeaderCol(wsT, "Principal")
+    colCharge = FindHeaderCol(wsT, "Charge-Off $")
+    
+
+    ' Check if all columns were found
+    If colLoanNbr = 0 Or colGLBalance = 0 Or colSBAGty = 0 Or colNetBalance = 0 Or colParticipant = 0 Then
+        MsgBox "One or more required columns were not found. Please check the headers.", vbCritical
+        Exit Sub
+    End If
+
+    ' Loop through each row to calculate the Net Balance and update SBA Gty%
+    For i = 3 To lasTrowT ' Assuming headers are in the first row
+        ' Skip the rows that are section headers
+        If wsT.Cells(i, colLoanNbr).Value = "Loan Nbr" Then ' added fix here for participant
+            ' Skip the header row and move to the next row
+            Do
+                i = i + 1
+            Loop Until wsT.Cells(i, colLoanNbr).Value <> "Loan Nbr"
+        End If
+
+        loanNbr = Trim(wsT.Cells(i, colLoanNbr).Value)
+        glBalance = wsT.Cells(i, colGLBalance).Value
+        sbaGty = wsT.Cells(i, colSBAGty).Value
+
+        ' Check if the necessary cells are filled
+        If loanNbr <> "" And IsNumeric(glBalance) And IsNumeric(sbaGty) Then
+            ' Convert sbaGty to a decimal percentage
+            sbaGty = sbaGty / 100
+            wsT.Cells(i, colSBAGty).Value = Format(sbaGty, "0.00%")
+
+            ' Calculate net balance
+            If InStr(loanNbr, "AB") > 0 Then
+               netBalance = ((glBalance + ChargeOff) * (1 - sbaGty)) - ChargeOff
+            Else
+                netBalance = glBalance
+            End If
+
+            wsT.Cells(i, colNetBalance).Value = netBalance
+        Else
+            ' Clear contents if necessary cells are not filled
+            wsT.Cells(i, colNetBalance).ClearContents
+            wsT.Cells(i, colSBAGty).ClearContents
+        End If
+    Next i
+
+   ' MsgBox "Net Balance and SBA Gty% columns have been filled successfully!"
+End Sub
+
+
+Function FindHeaderCol(ws As Worksheet, header As String) As Long
+    Dim rng As Range
+    Set rng = ws.Rows(2).Find(What:=header, LookIn:=xlValues, LookAt:=xlWhole, MatchCase:=False)
+    If Not rng Is Nothing Then
+        FindHeaderCol = rng.Column
+    Else
+        FindHeaderCol = 0 ' Return 0 if the header is not found
+    End If
+End Function
+
+
+Sub ClearSBAGtyIfParticipantEmpty()
+    ' This macro clears the contents of the SBA Gty% cell if the accompanying Participant cell is empty
+
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim colSBAGty As Long, colParticipant As Long
+    Dim i As Long
+    Dim participant As String
+
+    ' Set the worksheet to "Sectioned Data"
+    Set ws = ThisWorkbook.Worksheets("Pursuit-CDC")
+
+    ' Get the last row in the worksheet
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).row
+
+    ' Find the columns for "SBA Gty%" and "Participant"
+    colSBAGty = FindHeaderCol(ws, "SBA Gty%")
+    colParticipant = FindHeaderCol(ws, "Participant")
+
+    ' Debugging: Print column numbers to Immediate Window
+    Debug.Print "SBA Guarantee Percentage Column: " & colSBAGty
+    Debug.Print "Participant Column: " & colParticipant
+
+    ' Check if all columns were found
+    If colSBAGty = 0 Or colParticipant = 0 Then
+        MsgBox "One or more required columns were not found. Please check the headers.", vbCritical
+        Exit Sub
+    End If
+
+    ' Loop through each row to clear SBA Gty% if Participant is empty
+    For i = 3 To lastRow ' Assuming headers are in the first row
+        participant = Trim(ws.Cells(i, colParticipant).Value)
+
+        ' Check if the Participant cell is empty
+        If participant = "" Then
+            ws.Cells(i, colSBAGty).ClearContents
+        End If
+    Next i
+
+  '  MsgBox "SBA Gty% cells have been cleared where Participant cell is empty!"
+End Sub
+
+

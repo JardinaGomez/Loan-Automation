@@ -1,0 +1,144 @@
+Attribute VB_Name = "Module3"
+
+Function FindHeaderRow(ws As Worksheet, header As String) As Long
+    Dim rng As Range, myRange As Range
+   
+    Dim lastRow As Long
+    Set myRange = ws.Range("A14:A" & ws.Cells(ws.Rows.Count, 1).End(xlUp).row)
+   ' lastrow = wsOriginal.Cells(wsOriginal.Rows.Count, "A").End(xlUp).row
+    Set rng = myRange.Find(What:=header, LookIn:=xlValues, LookAt:=xlPart, MatchCase:=False)
+    If Not rng Is Nothing Then
+        FindHeaderRow = rng.row
+    Else
+        FindHeaderRow = 0 ' Return 0 if the header is not found
+    End If
+End Function
+
+Sub MoveNonAccrualDate()
+    Dim ws As Worksheet
+    Dim wsT As Worksheet, wsB As Worksheet
+    Dim NArow As Long
+    Dim endRow As Long
+    Dim accrualColumn As Long
+    Dim loanNumberColumn As Long
+    Dim rngToMove As Range
+    Dim targetColumn As Long
+    
+    ' add to skip section header rows
+    
+    ' Set the worksheet where the operation will take place
+    Set ws = ThisWorkbook.Sheets("Pursuit-CDC") ' Adjust the sheet name as needed
+    Set wsT = ThisWorkbook.Sheets("Non-Accrual - $0")
+    ' Find the row where the "Non-Accrual" section starts
+    NArow = FindHeaderRow(ws, "Non-Accrual")
+
+    ' If the Non-Accrual section is found
+    If NArow > 0 Then
+        ' Determine the last row of the non-accrual section
+        endRow = ws.Cells(NArow, 1).End(xlDown).row
+        
+        ' Find the "Non-Accrual Date" and "Loan Number" columns in the row where the non-accrual section starts
+        accrualColumn = FindHeader(ws, "Non-Accrual Date", NArow + 1)
+        loanNumberColumn = FindHeader(ws, "Loan Nbr", NArow + 1)
+        targetColumn = FindHeader(ws, "Note Date", NArow + 1)
+        
+        
+        ' If both columns are found, move Non-Accrual Date next to Loan Number within the specific range
+        If accrualColumn > 0 And loanNumberColumn > 0 Then
+            ' Define the range of the Non-Accrual section
+            Set rngToMove = ws.Range(ws.Cells(NArow + 1, accrualColumn), ws.Cells(endRow, accrualColumn))
+            
+            ' Define the target column (right next to the Loan Number column)
+           
+            
+            ' Cut the Non-Accrual Date cells in the Non-Accrual section
+            rngToMove.Cut Destination:=ws.Cells(NArow + 1, targetColumn)
+            
+            With ws.Cells(NArow + 1, targetColumn)
+                .Interior.Color = RGB(49, 62, 86)
+                .Font.Color = RGB(255, 255, 255)
+                .Font.name = "Rockwell"
+               .Font.Size = 10
+            End With
+            
+            ws.Columns.AutoFit
+            
+            ' Optional: Clear the old Non-Accrual Date cells (if needed)
+            ws.Range(ws.Cells(NArow, accrualColumn), ws.Cells(endRow, accrualColumn)).Delete Shift:=xlToLeft
+        Else
+            MsgBox "Either 'Non-Accrual Date' or 'Loan Number' column not found!"
+        End If
+    Else
+        MsgBox "'Non-Accrual' section not found!"
+    End If
+    
+    
+ 
+End Sub
+
+
+
+
+
+
+Function FindHeader(ws As Worksheet, header As String, row As Long) As Long
+    Dim rng As Range
+    Set rng = ws.Rows(row).Find(What:=header, LookIn:=xlValues, LookAt:=xlPart, MatchCase:=False)
+    If Not rng Is Nothing Then
+        FindHeader = rng.Column
+    Else
+        FindHeader = 0 ' Return 0 if the header is not found
+    End If
+End Function
+
+Sub MoveChargeOff()
+    Dim ws As Worksheet, wsB As Worksheet
+    Dim NArow As Long
+    Dim endRow As Long
+    Dim noteDateColumn As Long
+    Dim PastDueColumn As Long
+    Dim chargeOffColumn As Long
+    Dim rngToMove As Range
+    
+    ' Set the worksheet where the operation will take place
+    Set ws = ThisWorkbook.Sheets("Pursuit-CDC")
+    
+    ' Find the row where the "Non-Accrual" section starts
+    NArow = FindHeaderRow(ws, "Non-Accrual")
+    
+    ' If the Non-Accrual section is found
+    If NArow > 0 Then
+        ' Determine the last row of the non-accrual section
+        endRow = ws.Cells(NArow, 1).End(xlDown).row
+        
+        ' Find the "Note Date", "Amount Past Due", and "Charge Off" columns in the row where the non-accrual section starts
+        PastDueColumn = FindHeader(ws, "Amount Past Due", NArow + 1)
+        chargeOffColumn = FindHeader(ws, "Charge-Off", NArow + 1)
+        
+        ' If all columns are found, proceed with the operations
+        If PastDueColumn > 0 And chargeOffColumn > 0 Then
+        
+    
+            
+            ' Move "Charge Off" to overwrite "Amount Past Due"
+            Set rngToMove = ws.Range(ws.Cells(NArow, chargeOffColumn), ws.Cells(endRow, chargeOffColumn))
+            rngToMove.Cut Destination:=ws.Cells(NArow, PastDueColumn)
+            
+            
+            ' Adjust column widths
+            ws.Columns.AutoFit
+        Else
+            MsgBox "'Note Date', 'Amount Past Due', or 'Charge Off' column not found!"
+        End If
+    Else
+        MsgBox "'Non-Accrual' section not found!"
+    End If
+    
+    
+   
+    
+End Sub
+
+
+
+

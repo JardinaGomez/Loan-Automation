@@ -1,0 +1,21 @@
+Attribute VB_Name = "Module10"
+Sub MoveMaturity()
+Attribute MoveMaturity.VB_Description = "This macro moces maturity date column next to next payment due dat and adds currency to the principle and net balance column "
+Attribute MoveMaturity.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' MoveMaturity Macro
+' This macro moces maturity date column next to next payment due dat and adds currency to the principle and net balance column
+'
+
+'
+    Columns("B:B").Select
+    Columns("C:C").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Columns("I:I").Select
+    Selection.Cut Destination:=Columns("C:C")
+    Columns("I:I").Select
+    Selection.Delete Shift:=xlToLeft
+    Columns("F:G").Select
+    Selection.Style = "Currency"
+    Range("F7").Select
+End Sub
