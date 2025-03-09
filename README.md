@@ -53,7 +53,7 @@ This Loan Management Portfolio is an automated reporting tool designed in Excel 
 
   - G/L Balance
 
-  - USER18N
+  - USER18N (used for categorization like Non-Accrual identification)
 
   - Maturity Date
 
@@ -69,17 +69,18 @@ This Loan Management Portfolio is an automated reporting tool designed in Excel 
 
 # Instructions
 **1. Clone the repository:**
-  > git clone 
+  > git clone <https://github.com/JardinaGomez/Loan-Automation.git>
 
 **2.  Setup your Workbook:**
    - Make sure the workbook contains the folowing sheets before execution:
        - Data
        - Button
   
-**3. **Running the Report:**
+**3. Running the Report:**
   1. Open the Loan Management Portfolio.xlsm Excel workbook.
 
   2. Import your data : Click the "Import Data" button to imput you data file
+     
 ![Screenshot 2025-03-09 at 5 04 09 PM](https://github.com/user-attachments/assets/da7a1ed2-4ed2-454c-b3ca-c6ad6ddd6f32)
 
 
@@ -87,6 +88,7 @@ This Loan Management Portfolio is an automated reporting tool designed in Excel 
        - If not press the "RESET" button 
 
   5. Use the provided dropdown or manually run the RUNALL() macro to automatically create a report:
+     
   ![image](https://github.com/user-attachments/assets/b75e3de4-c6b5-48f6-a7d6-25d11db7701d)
 
   The final report will .. 
@@ -100,7 +102,7 @@ This Loan Management Portfolio is an automated reporting tool designed in Excel 
   - The imported data file contains the required headers.
 
   - All prior data sheets (except Button) have been cleared or deleted.
-  - 
+    
 ## Troubleshooting
 - For questions, bugs, or enhancement requests, please contact Jardina directly through internal github. 
 
