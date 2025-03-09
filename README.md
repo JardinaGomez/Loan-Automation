@@ -7,15 +7,14 @@ This Loan Management Portfolio is an automated reporting tool designed in Excel 
 ## Features
 
 - **Categorization:** Organizes loans into distinct sections based on their status
-  - 1-30 Days
+  - Past due by.. 
+    - 1-30 Days
 
-  - 30 Days
+    - 30 Days
 
-  - 60 Days
+    - 60 Days
 
-  - Over 90 Days
-
-  - Past Due
+    - Over 90 Days
 
   - Matured
 
